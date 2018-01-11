@@ -82,10 +82,7 @@
                     <ul>
                         <li>Organization of data into logical "chunks"</li>
                         <li>Each "chunk" goes into its own table</li>
-                        <li>Allows planner to optimize around that organization</li>
-                        <ul>
-                            <li>Constraint exclusions</li>
-                        </ul>
+                        <li>Allows planner to optimize around that organization (partition prunning, tuple routing)</li>
                         <li>Allows data retention policies</li>
                         <ul>
                             <li>Easily remove data that is no longer needed "live"</li>
@@ -95,8 +92,13 @@
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>How did PostgreSQL do this? (pre-10)</h2>
-                    <h4>Overview</h4>
+                    <h2>How did PostgreSQL do this before 10?</h2>
+                    <ul>
+                        <li>Inheritance</li>
+                        <li>Constraints</li>
+                        <li>Triggers</li>
+                    </ul>
+
 
                 </section>
 
@@ -104,24 +106,103 @@
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Table Inheritance</h4>
+                    <ul>
+                        <li>Causes target table to inherit the column structure and storage options of the given parent.</li>
+                        <li>Schema changes to parent are automatically applied to children. Not vice-versa.</li>
+                        <li>All data in child tables is visible when the parent is queried.</li>
+                        <li>Data inserted into parent goes into parent without trigger/rule redirection.</li>
+                        <li>Tablespaces not inherited</li>
+
+                    </ul>
+                    <pre><code data-trim>
+CREATE TABLE ... INHERITS ...;
+ALTER TABLE ... INHERITS ...;
+                    </code></pre>
+
 
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Table Constraints</h4>
+                    <ul>
+                        <li>Each child table has a constraint on the partition column that limits the data to a specific limit based on the partitioning pattern</li>
+                        <li>When the parent table is queried, <b><i>constraint exclusion</i></b> allows the planner to skip scanning child tables that are known to not have the desired data based on the constraint</li>
+                    </ul>
+                    <pre><code data-trim>
+ALTER TABLE ... ADD CONSTRAINT ... CHECK ('lower bound' &gt;= partition_column AND 'upper bound' &lt; partition_column);'
+ALTER TABLE ... ADD CONSTRAINT ... CHECK ('static value' = partition_column);'
+                    </code></pre>
 
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Triggers</h4>
+                    <ul>
+                        <li>Use table trigger on parent table to redirect data to child tables</li>
+                        <li>Straight-forward for INSERT-only. Tricky for UPDATEs.</li>
+                        <ul>
+                            <li>Requires moving data from one table to another causing write amplification.</li>
+                        </ul>
 
-                </section>
-
-                <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>How did PostgreSQL do this? (pre-10)</h2>
-                    <h4>Triggers 2</h4>
+                    </ul>
+                    <pre><code data-trim>
+CREATE OR REPLACE FUNCTION partman_test.time_taptest_table_part_trig_func()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+            DECLARE
+            v_count                 int;
+            v_partition_name        text;
+            v_partition_timestamp   timestamptz;
+        BEGIN 
+        IF TG_OP = 'INSERT' THEN 
+            v_partition_timestamp := date_trunc('day', NEW.col3);
+            IF NEW.col3 >= '2018-01-12 00:00:00-05' AND NEW.col3 < '2018-01-13 00:00:00-05' THEN 
+            INSERT INTO partman_test.time_taptest_table_p2018_01_12 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-11 00:00:00-05' AND NEW.col3 < '2018-01-12 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_11 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-13 00:00:00-05' AND NEW.col3 < '2018-01-14 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_13 VALUES (NEW.*) ;
+            ELSIF NEW.col3 >= '2018-01-10 00:00:00-05' AND NEW.col3 < '2018-01-11 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_10 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-14 00:00:00-05' AND NEW.col3 < '2018-01-15 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_14 VALUES (NEW.*) ;
+            ELSIF NEW.col3 >= '2018-01-09 00:00:00-05' AND NEW.col3 < '2018-01-10 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_09 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-15 00:00:00-05' AND NEW.col3 < '2018-01-16 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_15 VALUES (NEW.*) ;
+            ELSIF NEW.col3 >= '2018-01-08 00:00:00-05' AND NEW.col3 < '2018-01-09 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_08 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-16 00:00:00-05' AND NEW.col3 < '2018-01-17 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_16 VALUES (NEW.*) ;
+            ELSIF NEW.col3 >= '2018-01-07 00:00:00-05' AND NEW.col3 < '2018-01-08 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_07 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-17 00:00:00-05' AND NEW.col3 < '2018-01-18 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_17 VALUES (NEW.*) ;
+            ELSIF NEW.col3 >= '2018-01-06 00:00:00-05' AND NEW.col3 < '2018-01-07 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_06 VALUES (NEW.*) ; 
+            ELSIF NEW.col3 >= '2018-01-18 00:00:00-05' AND NEW.col3 < '2018-01-19 00:00:00-05' THEN 
+                INSERT INTO partman_test.time_taptest_table_p2018_01_18 VALUES (NEW.*) ;
+            ELSE
+                v_partition_name := partman.check_name_length('time_taptest_table'
+                         , to_char(v_partition_timestamp, 'YYYY_MM_DD'), TRUE);
+                SELECT count(*) INTO v_count 
+                         FROM pg_catalog.pg_tables 
+                         WHERE schemaname = 'partman_test'::name 
+                         AND tablename = v_partition_name::name;
+                IF v_count > 0 THEN 
+                    EXECUTE format('INSERT INTO %I.%I VALUES($1.*) '
+                        , 'partman_test', v_partition_name) USING NEW;
+                ELSE
+                    RETURN NEW;
+                END IF;
+            END IF;
+        END IF;
+        RETURN NULL;
+        END $function$
+                    </code></pre>
 
                 </section>
 
@@ -129,31 +210,61 @@
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Property Inheritance</h4>
 
+                    <ul>
+                        <li>Use the LIKE clause to the CREATE TABLE command to have the children include properties other than schema</li>
+                    <pre><code data-trim>
+CREATE TABLE ... (LIKE ... { INCLUDING | EXCLUDING } { DEFAULTS | CONSTRAINTS | 
+    IDENTITY | INDEXES | STORAGE | COMMENTS | ALL })
+                    </code></pre>
+
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Retention</h4>
-
+                    <ul>
+                        <li>Without partitioning, removing data requires DELETE statements.</li>
+                        <li>Can cause massive bloat depending on data churn. May require downtime to fix and regain performance.</li>
+                        <li>Partitioning allows removal of old data by simply uninheriting or dropping table</li>
+                    <pre><code data-trim>
+ALTER TABLE [child_table] NO INHERIT [parent_table];
+DROP TABLE [child_table];
+                    </code></pre>
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
-                    <h4>pg_partman</h4>
-
+                    <h4>pg_partman (PG 9.4+)</h4>
+                    
+                    <div id="li30" style="font-size: 25px";>
                     <ul>
-                        <li>How pg_partman manages all previous things</li>
-                        <li>Additional constraint exclusion feature</li>
+                        <li>Extension to manage all previous tasks... and more!</li>
+                        <li>Automatically optimized trigger for recent data</li>
+                        <li>Inherit index/foreign keys from parent</li>
+                        <li>Partition/unpartition data in managable commit batches</li>
+                        <li>Background worker for maintenance (no cron required)</li>
+                        <li>Manage constraints on non-partition columns</li>
+                        <li>Naming length limits; ensure complete partition name suffix</li>
+                        <li>Ensure consistent child table privileges</li>
+                        <li>Sub-partitioning supported</li>
+                        <li>Limited UPSERT support</li>
+                        <li>Monitoring</li>
+                        <ul>
+                            <li>Check parent for unexpected data</li>
+                            <li>Check across child tables for uniqueness</li>
+                            <li><b><i>pg_jobmon</i></b> - logging &amp; monitoring to ensure maintenance is running properl</li>
+                        </ul>
 
                     </ul>
+                    </div>
                 </section>
 
 
-
                 <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>How does PostgreSQL do this? (PG 10)</h2>
+                    <h2>How does PostgreSQL 10<br/> do this natively?</h2>
 
                     <ul>
+                        <li><a href="https://www.postgresql.org/docs/10/static/ddl-partitioning.html" target="_blank">https://www.postgresql.org/docs/10/static/ddl-partitioning.html</a></li>
                         <li>Inheritance, constraints &amp; triggers all handled internally</li>
                         <li>New syntax commands</li>
                         <li>Range &amp; List modes</li>
@@ -167,23 +278,97 @@
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How does PostgreSQL do this? (PG 10)</h2>
                     <h4>Range Partitioning</h4>
+                    <ul>
+                        <li>Partitioned into ranges by one or more columns with no overlap between partitions. Ex: Time/ID</li>
+                    </ul>
+                    <pre><code data-trim>
+CREATE TABLE measurement (
+    city_id         int not null,
+    logdate         date not null,
+    peaktemp        int,
+    unitsales       int
+) PARTITION BY RANGE (logdate);                   
+                    </code></pre>
 
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How does PostgreSQL do this? (PG 10)</h2>
+                    <h4>Range Partitioning</h4>
+                    <pre><code data-trim>
+CREATE TABLE measurement_y2006m02 PARTITION OF measurement
+    FOR VALUES FROM ('2006-02-01') TO ('2006-03-01')
+
+CREATE TABLE measurement_y2006m03 PARTITION OF measurement
+    FOR VALUES FROM ('2006-03-01') TO ('2006-04-01')
+                    </code></pre>
+
+
+                    <pre><code data-trim>
+keith@keith=# \d+ measurement
+                                 Table "public.measurement"
+  Column   |  Type   | Collation | Nullable | Default | Storage | Stats target | Description 
+-----------+---------+-----------+----------+---------+---------+--------------+-------------
+ city_id   | integer |           | not null |         | plain   |              | 
+ logdate   | date    |           | not null |         | plain   |              | 
+ peaktemp  | integer |           |          |         | plain   |              | 
+ unitsales | integer |           |          |         | plain   |              | 
+Partition key: RANGE (logdate)
+Partitions: measurement_y2006m02 FOR VALUES FROM ('2006-02-01') TO ('2006-03-01'),
+            measurement_y2006m03 FOR VALUES FROM ('2006-03-01') TO ('2006-04-01')
+                    </code></pre>
+                </section>
+
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h2>How does PostgreSQL do this? (PG 10)</h2>
                     <h4>List Partitioning</h4>
+                    <ul>
+                        <li>Partitioned by explicitly listing which key value(s) appear(s) in each partition</li>
+                    </ul>
+                    <pre><code data-trim>
+CREATE TABLE cities (
+    city_id      bigserial not null,
+    name         text not null,
+    population   bigint
+) PARTITION BY LIST (left(lower(name), 1));
+                    </code></pre>
 
                 </section>
 
+
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h2>How does PostgreSQL do this? (PG 10)</h2>
+                    <h4>List Partitioning</h4>
+                    <pre><code data-trim>
+CREATE TABLE cities_west
+    PARTITION OF cities (
+    CONSTRAINT city_id_nonzero CHECK (city_id != 0)
+) FOR VALUES IN ('Los Angeles', 'San Francisco');
+                    </code></pre>
+                    <pre><code data-trim>
+
+keith@keith=# \d+ cities
+                                                    Table "public.cities"
+   Column   |  Type  | Collation | Nullable |                 Default                 | Storage  | Stats target | Description 
+------------+--------+-----------+----------+-----------------------------------------+----------+--------------+-------------
+ city_id    | bigint |           | not null | nextval('cities_city_id_seq'::regclass) | plain    |              | 
+ name       | text   |           | not null |                                         | extended |              | 
+ population | bigint |           |          |                                         | plain    |              | 
+Partition key: LIST ("left"(lower(name), 1))
+Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
+                    </code></pre>
+
+                </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How does PostgreSQL do this? (PG 10)</h2>
                     <h4>pg_partman</h4>
 
                     <ul>
-                        <li>How pg_partman incorportates native things</li>
-                        <li>Template table</li>
+                        <li>Native does not automatically make new partitions, so pg_partman still useful.</li>
+                        <li>Privileges of parent not explicitly given to children in native. partman did this pre-10 and still does for 10+ to allow direct child interaction.</li>
+                        <li>Uses a template table since indexes/FKs cannot be applied to a native parent (yet).</li>
+                        <li>Native does not handle data that has no target child (yet). Still requires old trigger method.</li>
 
                     </ul>
                 </section>
@@ -191,14 +376,136 @@
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How will PostgreSQL do this? (PG 11+)</h2>
-                    <h4>Hash Partitioning</h4>
+                    <h4>Hash Partitioning (committed)</h4>
+                    <ul>
+                        <li>Used when you want to partition a growing data set evenly</li>
+                        <li>Cannot currently use partition prunning since it's still based on constraint exclusion values</li>
+                        <li>Thanks to Depesz for examples (<a href="https://www.depesz.com" target="_blank">depesz.com</a>)
+                    </ul>
+                    <pre><code data-trim>
+create table users (
+    username    text         not null,
+    password    text,
+    created_on  timestamptz  not null default now(),
+    id_admin    bool         not null default false
+) PARTITION BY HASH (username);
+                    </code></pre>
 
                 </section>
 
+
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h4>Hash Partitioning</h4>
+                    <ul>
+                        <li>Simple example: MODULUS is number of partitions, and REMAINDER is a number, 0 or more, but less than MODULUS.</li>
+                    </ul>
+                    <pre><code data-trim>
+CREATE TABLE users_p0 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 0);
+CREATE TABLE users_p1 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 1);
+CREATE TABLE users_p2 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 2);
+CREATE TABLE users_p3 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 3);
+CREATE TABLE users_p4 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 4);
+CREATE TABLE users_p5 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 5);
+CREATE TABLE users_p6 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 6);
+CREATE TABLE users_p7 PARTITION OF users ( primary key (username) ) FOR VALUES WITH (MODULUS 8, REMAINDER 7);
+                    </code></pre>
+
+                </section>
+
+
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h4>Hash Partitioning</h4>
+                    <pre style="font-size: 12px";><code data-trim>
+\d+ users
+                                              Table "public.users"
+   Column   |           Type           | Collation | Nullable | Default | Storage  | Stats target | Description 
+------------+--------------------------+-----------+----------+---------+----------+--------------+-------------
+ username   | text                     |           | not null |         | extended |              | 
+ password   | text                     |           |          |         | extended |              | 
+ created_on | timestamp with time zone |           | not null | now()   | plain    |              | 
+ id_admin   | boolean                  |           | not null | false   | plain    |              | 
+Partition key: HASH (username)
+Partitions: users_p0 FOR VALUES WITH (modulus 8, remainder 0),
+            users_p1 FOR VALUES WITH (modulus 8, remainder 1),
+            users_p2 FOR VALUES WITH (modulus 8, remainder 2),
+            users_p3 FOR VALUES WITH (modulus 8, remainder 3),
+            users_p4 FOR VALUES WITH (modulus 8, remainder 4),
+            users_p5 FOR VALUES WITH (modulus 8, remainder 5),
+            users_p6 FOR VALUES WITH (modulus 8, remainder 6),
+            users_p7 FOR VALUES WITH (modulus 8, remainder 7)
+                    </code></pre>
+ 
+                    <pre style="font-size: 12px";><code data-trim>
+\d+ users_p1
+                                            Table "public.users_p1"
+   Column   |           Type           | Collation | Nullable | Default | Storage  | Stats target | Description 
+------------+--------------------------+-----------+----------+---------+----------+--------------+-------------
+ username   | text                     |           | not null |         | extended |              | 
+ password   | text                     |           |          |         | extended |              | 
+ created_on | timestamp with time zone |           | not null | now()   | plain    |              | 
+ id_admin   | boolean                  |           | not null | false   | plain    |              | 
+Partition of: users FOR VALUES WITH (modulus 8, remainder 1)
+Partition constraint: satisfies_hash_partition('1161847'::oid, 8, 1, username)
+Indexes:
+    "users_p1_pkey" PRIMARY KEY, btree (username)
+                    </code></pre>
+
+                </section>
+
+
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h4>Hash Partitioning</h4>
+                    <pre style="font-size: 12px";><code data-trim>
+$ \copy users (username) from stdin;
+proffers
+babbles
+cents
+choose
+chalked
+redoubts
+pitting
+coddling
+relieves
+wooing
+codgers
+sinewy
+separate
+ferry
+crusty
+cursing
+hawkers
+deducted
+gaseous
+voyagers
+\.
+                    </code></pre>
+
+                    <pre style="font-size: 12px";><code data-trim>
+select tableoid::regclass as partition_name, count(*) from users group by 1 order by 1;
+ partition_name | count 
+----------------+-------
+ users_p0       |     2
+ users_p1       |     5
+ users_p2       |     1
+ users_p3       |     3
+ users_p4       |     2
+ users_p5       |     3
+ users_p6       |     3
+ users_p7       |     1
+(8 rows)
+                    </code></pre>
+
+                </section>
+
+
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How will PostgreSQL do this? (PG 11+)</h2>
-                    <h4>Default partition</h4>
+                    <h4>Default partition (committed)</h4>
 
+
+                    <pre><code data-trim>
+ATTACH PARTITION [partition_name] FOR VALUES DEFAULT;
+                    </code></pre>
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
@@ -211,49 +518,15 @@
                     <h4>Index inheritance</h4>
                 </section>
 
-                <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>How will PostgreSQL do this? (PG 11+)</h2>
-                    <h4>Read optimizations</h4>
-                </section>
-
-
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Still to come</h2>
                     <ul>
                         <li>Global Indexes - No ETA (please correct me)</li>
+                        <li>Better read optimization. Partition pruning not based solely on constraint exclusion</li>
 
                 </section>
 
-
-
-
-				<section data-background="css/theme/crunchy_white_bg.png">
-                    <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>Click down on this slide</h2>
-                    <p>
-                        <ul>
-                            <li>Stuff stuff stuff</li>
-                        </ul>
-                    </p>
-                    </section>
-                    <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>Click down on this slide</h2>
-                    <p>
-                        <ul>
-                            <li>Stuff stuff stuff</li>
-                        </ul>
-                    </p>
-                    </section>
-                    <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>Last slide in subsection</h2>
-                    <p>
-                        <ul>
-                            <li>click right</li>
-                        </ul>
-                    </p>
-                    </section>
-                </section>
 
 
                  <section data-background="css/theme/crunchy_white_bg.png">
