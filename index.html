@@ -456,7 +456,7 @@ Indexes:
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h4>Hash Partitioning</h4>
                     <pre style="font-size: 12px";><code data-trim>
-$ \copy users (username) from stdin;
+\copy users (username) from stdin;
 proffers
 babbles
 cents
@@ -481,7 +481,8 @@ voyagers
                     </code></pre>
 
                     <pre style="font-size: 12px";><code data-trim>
-select tableoid::regclass as partition_name, count(*) from users group by 1 order by 1;
+SELECT tableoid::regclass as partition_name, count(*) FROM users GROUP BY 1 ORDER BY 1;
+
  partition_name | count 
 ----------------+-------
  users_p0       |     2
@@ -501,29 +502,37 @@ select tableoid::regclass as partition_name, count(*) from users group by 1 orde
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How will PostgreSQL do this? (PG 11+)</h2>
                     <h4>Default partition (committed)</h4>
-
+                    <ul>
+                        <li>Handle partition values that do not have a defined child</li>
+                    </ul>
 
                     <pre><code data-trim>
-ATTACH PARTITION [partition_name] FOR VALUES DEFAULT;
+ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     </code></pre>
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How will PostgreSQL do this? (PG 11+)</h2>
-                    <h4>Update routing</h4>
+                    <h4>Limited UPSERT (committed)</h4>
+                    <ul>
+                        <li>Allow INSERT ... ON CONFLICT DO NOTHING</li>
+                    </ul>
                 </section>
-
-                <section data-background="css/theme/crunchy_white_bg.png">
-                    <h2>How will PostgreSQL do this? (PG 11+)</h2>
-                    <h4>Index inheritance</h4>
-                </section>
-
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Still to come</h2>
                     <ul>
+                        <li>Update Routing (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/CAJ3gD9c9w3SX02WgFtA8SES%3DLe8XPBZ%2Ba4bNDheYsaY_pQ3RxA%40mail.gmail.com#CAJ3gD9c9w3SX02WgFtA8SES=Le8XPBZ+a4bNDheYsaY_pQ3RxA@mail.gmail.com" target="_blank">thread</a>)</li>
+                        <li>Index Inheritance (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/20171228215304.twephgpycnt7s5gz%40alvherre.pgsql#20171228215304.twephgpycnt7s5gz@alvherre.pgsql" target="_blank">thread</a>)</li>
                         <li>Global Indexes - No ETA (please correct me)</li>
-                        <li>Better read optimization. Partition pruning not based solely on constraint exclusion</li>
+                        <li>Foreign Keys - both TO and FROM (<a href="https://www.postgresql.org/message-id/flat/20171231194359.cvojcour423ulha4%40alvherre.pgsql#20171231194359.cvojcour423ulha4@alvherre.pgsql" target="_blank">thread</a>)</li>
+                        <li>Better read optimization.
+                            <ul>
+                                <li>Faster partition pruning (not based solely on constraint exclusion)</li>
+                                <li>Partition-wise aggregation/grouping (<a href="https://www.postgresql.org/message-id/flat/CAM2%2B6%3DXsyG3%3DFRYePc6YBZ3VFJ9BRx66V-eBO257oC0d6F6bNQ%40mail.gmail.com#CAM2+6=XsyG3=FRYePc6YBZ3VFJ9BRx66V-eBO257oC0d6F6bNQ@mail.gmail.com" target="_blank">thread</a>)</li>
+                            </ul>
+                        </li>
+                    </ul>
 
                 </section>
 
