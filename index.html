@@ -139,6 +139,7 @@ ALTER TABLE ... ADD CONSTRAINT ... CHECK ('static value' = partition_column);'
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Triggers</h4>
+                    <div id="li30" style="font-size: 25px";>
                     <ul>
                         <li>Use table trigger on parent table to redirect data to child tables</li>
                         <li>Straight-forward for INSERT-only. Tricky for UPDATEs.</li>
@@ -147,6 +148,7 @@ ALTER TABLE ... ADD CONSTRAINT ... CHECK ('static value' = partition_column);'
                         </ul>
 
                     </ul>
+                    </div>
                     <pre><code data-trim>
 CREATE OR REPLACE FUNCTION partman_test.time_taptest_table_part_trig_func()
  RETURNS trigger
@@ -379,7 +381,7 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <h4>Hash Partitioning (committed)</h4>
                     <ul>
                         <li>Used when you want to partition a growing data set evenly</li>
-                        <li>Cannot currently use partition prunning since it's still based on constraint exclusion values</li>
+                        <li>Cannot currently use newer partition prunning since it's still based on constraint exclusion values</li>
                         <li>Thanks to Depesz for examples (<a href="https://www.depesz.com" target="_blank">depesz.com</a>)
                     </ul>
                     <pre><code data-trim>
@@ -523,8 +525,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <h2>Still to come</h2>
                     <ul>
                         <li>Update Routing (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/CAJ3gD9c9w3SX02WgFtA8SES%3DLe8XPBZ%2Ba4bNDheYsaY_pQ3RxA%40mail.gmail.com#CAJ3gD9c9w3SX02WgFtA8SES=Le8XPBZ+a4bNDheYsaY_pQ3RxA@mail.gmail.com" target="_blank">thread</a>)</li>
-                        <li>Index Inheritance (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/20171228215304.twephgpycnt7s5gz%40alvherre.pgsql#20171228215304.twephgpycnt7s5gz@alvherre.pgsql" target="_blank">thread</a>)</li>
-                        <li>Global Indexes - No ETA (please correct me)</li>
+                        <li>Index Inheritance (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/c8fe4f6b-ff46-aae0-89e3-e936a35f0cfd%40postgrespro.ru#c8fe4f6b-ff46-aae0-89e3-e936a35f0cfd@postgrespro.ru" target="_blank">thread</a>)</li>
                         <li>Foreign Keys - both TO and FROM (<a href="https://www.postgresql.org/message-id/flat/20171231194359.cvojcour423ulha4%40alvherre.pgsql#20171231194359.cvojcour423ulha4@alvherre.pgsql" target="_blank">thread</a>)</li>
                         <li>Better read optimization.
                             <ul>
@@ -532,6 +533,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                                 <li>Partition-wise aggregation/grouping (<a href="https://www.postgresql.org/message-id/flat/CAM2%2B6%3DXsyG3%3DFRYePc6YBZ3VFJ9BRx66V-eBO257oC0d6F6bNQ%40mail.gmail.com#CAM2+6=XsyG3=FRYePc6YBZ3VFJ9BRx66V-eBO257oC0d6F6bNQ@mail.gmail.com" target="_blank">thread</a>)</li>
                             </ul>
                         </li>
+                        <li>Global Indexes - No ETA (please correct me)</li>
                     </ul>
 
                 </section>
