@@ -82,7 +82,7 @@
                     <ul>
                         <li>Organization of data into logical "chunks"</li>
                         <li>Each "chunk" goes into its own table</li>
-                        <li>Allows planner to optimize around that organization (partition prunning, tuple routing)</li>
+                        <li>Allows planner to optimize around that organization (partition pruning, tuple routing)</li>
                         <li>Allows data retention policies</li>
                         <ul>
                             <li>Easily remove data that is no longer needed "live"</li>
@@ -243,7 +243,7 @@ DROP TABLE [child_table];
                         <li>Extension to manage all previous tasks... and more!</li>
                         <li>Automatically optimized trigger for recent data</li>
                         <li>Inherit index/foreign keys from parent</li>
-                        <li>Partition/unpartition data in managable commit batches</li>
+                        <li>Partition/unpartition data in manageable commit batches</li>
                         <li>Background worker for maintenance (no cron required)</li>
                         <li>Manage constraints on non-partition columns</li>
                         <li>Naming length limits; ensure complete partition name suffix</li>
@@ -381,7 +381,7 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <h4>Hash Partitioning (committed)</h4>
                     <ul>
                         <li>Used when you want to partition a growing data set evenly</li>
-                        <li>Cannot currently use newer partition prunning since it's still based on constraint exclusion values</li>
+                        <li>Cannot currently use newer partition pruning since it's still based on constraint exclusion values</li>
                         <li>Thanks to Depesz for examples (<a href="https://www.depesz.com" target="_blank">depesz.com</a>)
                     </ul>
                     <pre><code data-trim>
