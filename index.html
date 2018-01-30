@@ -216,7 +216,7 @@ AS $function$
                         <li>Use the LIKE clause to the CREATE TABLE command to have the children include properties other than schema</li>
                     <pre><code data-trim>
 CREATE TABLE ... (LIKE ... { INCLUDING | EXCLUDING } { DEFAULTS | CONSTRAINTS | 
-    IDENTITY | INDEXES | STORAGE | COMMENTS | ALL })
+    | INDEXES | STORAGE | COMMENTS | ALL })
                     </code></pre>
 
                 </section>
@@ -299,10 +299,10 @@ CREATE TABLE measurement (
                     <h4>Range Partitioning</h4>
                     <pre><code data-trim>
 CREATE TABLE measurement_y2006m02 PARTITION OF measurement
-    FOR VALUES FROM ('2006-02-01') TO ('2006-03-01')
+    FOR VALUES FROM ('2006-02-01') TO ('2006-03-01');
 
 CREATE TABLE measurement_y2006m03 PARTITION OF measurement
-    FOR VALUES FROM ('2006-03-01') TO ('2006-04-01')
+    FOR VALUES FROM ('2006-03-01') TO ('2006-04-01');
                     </code></pre>
 
 
@@ -375,6 +375,20 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     </ul>
                 </section>
 
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h2>How does PostgreSQL do this? (PG 10)</h2>
+                    <h4>A Note About "IDENTITY"</h4>
+                    <ul>
+                        <li>New feature in PG10 to properly follow SQL standard for managing table sequences</li>
+                        <li>Better handling of sequence permissions when tied to a table</li>
+                        <li>Better enforcement of only allowing sequence use for column values</li>
+                        <li>Easier to remove sequences from a table</li>
+                        <li>Only supported properly with native partitioning</li>
+                        <li>Only works when entering data through the parent table</li>
+                        <li>More info on <a href="https://blog.2ndquadrant.com/postgresql-10-identity-columns/" target="_blank">2ndQuadrant Blog</a>
+                    </ul>
+
+                </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>How will PostgreSQL do this? (PG 11+)</h2>
