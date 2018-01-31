@@ -45,7 +45,7 @@
                         Presented by <a href="http://keithf4.com" target="_blank">Keith Fiske</a> / <a href="http://twitter.com/keithf4" target="_blank">@keithf4</a>
                     </p>
                     <p>
-                    Senior Database Engineer @ <a href="https://www.crunchydata.com/" target="_blank">Crunchy Data Solutions</a><br/>
+                    Senior Database Engineer @ <a href="https://www.crunchydata.com/" target="_blank">Crunchy Data Solutions, Inc</a><br/>
                         (<a href="https://github.com/keithf4/pg_partman" target="_blank">pg_partman</a>, <a href="https://github.com/omniti-labs/pg_extractor" target="_blank">pg_extractor</a>, <a href="https://github.com/omniti-labs/mimeo" target="_blank">mimeo</a>)
                     </p>
                     <p>
@@ -62,10 +62,10 @@
                     <p>
                         <ul>
                             <li>Industry leader in providing enterprise PostgreSQL support and open source solutions</li>
-                            <li>Trusted PostgreSQL</li>
+                            <li>Crunchy Certified PostgreSQL</li>
                             <ul>
                                 <li>100% Open Source PostgreSQL</li> 
-                                <li>Common Criteria Certified</li>
+                                <li>Common Criteria EAL 2+</li>
                             </ul>
                             <li>We're hiring!</li>
                             <ul>
@@ -329,10 +329,10 @@ Partitions: measurement_y2006m02 FOR VALUES FROM ('2006-02-01') TO ('2006-03-01'
                     </ul>
                     <pre><code data-trim>
 CREATE TABLE cities (
-    city_id      bigserial not null,
+    city_id         bigserial not null,
     name         text not null,
-    population   bigint
-) PARTITION BY LIST (left(lower(name), 1));
+    population   int
+) PARTITION BY LIST (initcap(name));
                     </code></pre>
 
                 </section>
@@ -468,6 +468,15 @@ Indexes:
 
                 </section>
 
+                <section data-background="css/theme/crunchy_white_bg.png">
+                    <h4>Update Routing</h4>
+                    <ul>
+                        <li>When an UPDATE causes a row to no longer match the partition constraint, try to move it to a different partition where it does match the partition constraint</li>
+                        <li>Behind the scences, does a DELETE/INSERT</li>
+                        <li>Still some concurrency issues, but being worked on</li>
+                    </ul>
+
+                </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h4>Hash Partitioning</h4>
@@ -538,7 +547,6 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Still to come</h2>
                     <ul>
-                        <li>Update Routing (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/CAJ3gD9c9w3SX02WgFtA8SES%3DLe8XPBZ%2Ba4bNDheYsaY_pQ3RxA%40mail.gmail.com#CAJ3gD9c9w3SX02WgFtA8SES=Le8XPBZ+a4bNDheYsaY_pQ3RxA@mail.gmail.com" target="_blank">thread</a>)</li>
                         <li>Index Inheritance (maybe 11 - <a href="https://www.postgresql.org/message-id/flat/c8fe4f6b-ff46-aae0-89e3-e936a35f0cfd%40postgrespro.ru#c8fe4f6b-ff46-aae0-89e3-e936a35f0cfd@postgrespro.ru" target="_blank">thread</a>)</li>
                         <li>Foreign Keys - both TO and FROM (<a href="https://www.postgresql.org/message-id/flat/20171231194359.cvojcour423ulha4%40alvherre.pgsql#20171231194359.cvojcour423ulha4@alvherre.pgsql" target="_blank">thread</a>)</li>
                         <li>Better read optimization.
