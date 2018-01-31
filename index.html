@@ -126,7 +126,7 @@ ALTER TABLE ... INHERITS ...;
                     <h2>How did PostgreSQL do this? (pre-10)</h2>
                     <h4>Table Constraints</h4>
                     <ul>
-                        <li>Each child table has a constraint on the partition column that limits the data to a specific limit based on the partitioning pattern</li>
+                        <li>Each child table has a constraint on the partition column that limits the data to specific values/ranges based on the partitioning pattern</li>
                         <li>When the parent table is queried, <b><i>constraint exclusion</i></b> allows the planner to skip scanning child tables that are known to not have the desired data based on the constraint</li>
                     </ul>
                     <pre><code data-trim>
@@ -226,7 +226,7 @@ CREATE TABLE ... (LIKE ... { INCLUDING | EXCLUDING } { DEFAULTS | CONSTRAINTS |
                     <h4>Retention</h4>
                     <ul>
                         <li>Without partitioning, removing data requires DELETE statements.</li>
-                        <li>Can cause massive bloat depending on data churn. May require downtime to fix and regain performance.</li>
+                        <li>Can cause <a href="https://www.keithf4.com/checking-for-postgresql-bloat/#why" target="_blank">massive bloat</a> depending on data churn. May require downtime to fix and regain performance.</li>
                         <li>Partitioning allows removal of old data by simply uninheriting or dropping table</li>
                     <pre><code data-trim>
 ALTER TABLE [child_table] NO INHERIT [parent_table];
@@ -254,7 +254,7 @@ DROP TABLE [child_table];
                         <ul>
                             <li>Check parent for unexpected data</li>
                             <li>Check across child tables for uniqueness</li>
-                            <li><b><i>pg_jobmon</i></b> - logging &amp; monitoring to ensure maintenance is running properl</li>
+                            <li><b><i>pg_jobmon</i></b> - logging &amp; monitoring to ensure maintenance is running properly</li>
                         </ul>
 
                     </ul>
