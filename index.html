@@ -407,7 +407,6 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <h4>Hash Partitioning (committed)</h4>
                     <ul>
                         <li>Used when you want to partition a growing data set evenly</li>
-                        <li>Cannot currently use newer partition pruning since it's still based on constraint exclusion values</li>
                         <li>Thanks to Depesz for examples (<a href="https://www.depesz.com" target="_blank">depesz.com</a>)
                     </ul>
                     <pre><code data-trim>
@@ -552,7 +551,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <ul>
                         <li>Faster partition pruning</li>
                         <li>More efficient than constraint exclusion to allow faster querying of partitioned data</li>
-                        <li>Currently just improves planner time, but will soon also improve execution time</li>
+                        <li>Improves both planner and execution time (Committed for 11)</li>
                         <li>Partition-wise aggregation/grouping (Committed for 11)</li>
                     </ul>
                 </section>
@@ -562,6 +561,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <h4>Index Inheritance (committed)</h4>
                     <ul>
                         <li>Primary, Unique, &amp; and General indexes</li>
+                        <li>Primary &amp; Unique require the partition column to be part of the index definition</li>
                         <li>Uniqueness only enforced per child table, not partition-wide</li>
                     </ul>
 
@@ -570,10 +570,8 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                 <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Still to come</h2>
                     <ul>
-                        <li>Foreign Keys - FROM (and maybe TO) (<a href="https://www.postgresql.org/message-id/flat/20171231194359.cvojcour423ulha4%40alvherre.pgsql#20171231194359.cvojcour423ulha4@alvherre.pgsql" target="_blank">thread</a>)</li>
-                        </li>
+                        <li>Foreign Keys - FROM works but still working on TO</li>
                         <li>Further UPSERT support options</li>
-                        <li>Tuple routing to foreign partitions</li>
                         <li>Tablespace inheritance</li>
                         <li>Global Indexes - No ETA (please correct me)</li>
                     </ul>
