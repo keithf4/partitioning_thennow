@@ -396,7 +396,7 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <ul>
                         <li>When an UPDATE causes a row to no longer match the partition constraint, try to move it to a different partition where it does match the partition constraint</li>
                         <li>Behind the scences, does a DELETE/INSERT</li>
-                        <li>Still some concurrency issues, but being worked on</li>
+                        <li>Concurrency has some special edge-cases. See docs.</li>
                     </ul>
 
                 </section>
@@ -405,7 +405,7 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <h2>How will PostgreSQL do this? <span style="color:#228B22">(PG 11+)</span></h2>
                     <h4>Hash Partitioning (committed)</h4>
                     <ul>
-                        <li>Used when you want to partition a growing data set evenly</li>
+                        <li>Used when you want to partition a growing data set evenly or don't know data distribution in advance</li>
                         <li>Thanks to Depesz for examples (<a href="https://www.depesz.com" target="_blank">depesz.com</a>)
                     </ul>
                     <pre><code data-trim>
@@ -541,6 +541,10 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <h4>Limited UPSERT (committed)</h4>
                     <ul>
                         <li>Allow INSERT ... ON CONFLICT DO NOTHING</li>
+                        <li>DO UPDATE</li>
+                        <ul>
+                            <li>Works if there's a matching unique constraint with the partition key</li>
+                        </ul>
                     </ul>
                 </section>
 
@@ -552,6 +556,9 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                         <li>More efficient than constraint exclusion to allow faster querying of partitioned data</li>
                         <li>Improves both planner and execution time (Committed for 11)</li>
                         <li>Partition-wise aggregation/grouping (Committed for 11)</li>
+                        <ul>
+                            <li>Turned off by default due to increased memory usage</li>
+                        </ul>
                     </ul>
                 </section>
 
@@ -561,7 +568,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <ul>
                         <li>Primary, Unique, &amp; General indexes</li>
                         <li>Primary &amp; Unique require the partition column to be part of the index definition</li>
-                        <li>Uniqueness only enforced per child table, not partition-wide</li>
+                        <li>Uniqueness only enforced per child table, not partition-wide. But it technically works since partition key is required.</li>
                     </ul>
 
                 </section>
