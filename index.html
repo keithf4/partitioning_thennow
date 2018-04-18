@@ -349,15 +349,14 @@ CREATE TABLE cities_west
 ) FOR VALUES IN ('Los Angeles', 'San Francisco');
                     </code></pre>
                     <pre><code data-trim>
-
 keith@keith=# \d+ cities
-                                                    Table "public.cities"
-   Column   |  Type  | Collation | Nullable |                 Default                 | Storage  | Stats target | Description 
-------------+--------+-----------+----------+-----------------------------------------+----------+--------------+-------------
- city_id    | bigint |           | not null | nextval('cities_city_id_seq'::regclass) | plain    |              | 
- name       | text   |           | not null |                                         | extended |              | 
- population | bigint |           |          |                                         | plain    |              | 
-Partition key: LIST ("left"(lower(name), 1))
+                                                     Table "public.cities"
+   Column   |  Type   | Collation | Nullable |                 Default                 | Storage  | Stats target | Description 
+------------+---------+-----------+----------+-----------------------------------------+----------+--------------+-------------
+ city_id    | bigint  |           | not null | nextval('cities_city_id_seq'::regclass) | plain    |              | 
+ name       | text    |           | not null |                                         | extended |              | 
+ population | integer |           |          |                                         | plain    |              | 
+Partition key: LIST (initcap(name))
 Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     </code></pre>
 
@@ -560,7 +559,7 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                     <h2>How will PostgreSQL do this? <span style="color:#228B22">(PG 11+)</span></h2>
                     <h4>Index Inheritance (committed)</h4>
                     <ul>
-                        <li>Primary, Unique, &amp; and General indexes</li>
+                        <li>Primary, Unique, &amp; General indexes</li>
                         <li>Primary &amp; Unique require the partition column to be part of the index definition</li>
                         <li>Uniqueness only enforced per child table, not partition-wide</li>
                     </ul>
