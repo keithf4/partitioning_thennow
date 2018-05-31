@@ -396,7 +396,7 @@ Partitions: cities_west FOR VALUES IN ('Los Angeles', 'San Francisco')
                     <ul>
                         <li>When an UPDATE causes a row to no longer match the partition constraint, try to move it to a different partition where it does match the partition constraint</li>
                         <li>Behind the scences, does a DELETE/INSERT</li>
-                        <li>Concurrency has some special edge-cases. See docs.</li>
+                        <li>Concurrency has some special edge-cases. <a href="https://www.postgresql.org/docs/devel/static/ddl-partitioning.html#DDL-PARTITIONING-DECLARATIVE-LIMITATIONS" target="_blank">See docs.</a></li>
                     </ul>
 
                 </section>
@@ -595,6 +595,8 @@ ALTER TABLE [parent_table] ATTACH PARTITION [partition_name] DEFAULT;
                         <li>Crunchy Data Solutions, Inc - <a href="http://www.crunchydata.com" target="_blank">crunchydata.com</a></li>
                         <li>Make cool presentations like this - <a href="https://github.com/hakimel/reveal.js/" target="_blank">reveal.js</a></li>
                     </ul>
+
+                    <br/><br/><a href="http://slides.keithf4.com/extension_dev">http://slides.keithf4.com/partitioning_thennow</a>
 
                  </section>
 			</div>
