@@ -750,6 +750,18 @@ Partition constraint: (NOT ((logtime IS NOT NULL) AND (((logtime &gt;= '2006-02-
                 </section>
 
                 <section data-background="css/theme/crunchy_white_bg.png">
+                <h2>Migration to Native</h2>
+                <ul>
+                    <li>Cannot convert non-partitioned table into a partitioned parent</li>
+                    <li>Can simply uninherit child tables and attach to new partitioned parent table</li>
+                    <li>Set child partition constraint, THEN drop old constraint</li>
+                    <li><a href="https://info.crunchydata.com/blog/how-to-migrate-from-trigger-based-partitioning-to-native-in-postgresql" target="_blank">Blog post from Crunchy Data</a> and <a href="https://github.com/pgpartman/pg_partman/blob/master/doc/migrate_to_native.md" target="_blank">documentation included in pg_partman</a></li>
+
+                </ul>
+
+                </section>
+
+                <section data-background="css/theme/crunchy_white_bg.png">
                     <h2>Still to come</h2>
                     <ul>
                         <li>Global Indexes - No ETA</li>
